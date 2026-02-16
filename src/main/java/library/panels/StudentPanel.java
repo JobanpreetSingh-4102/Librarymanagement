@@ -355,8 +355,20 @@ public class StudentPanel extends JPanel {
         JTable table = new JTable(model);
         table.setRowHeight(28);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.getTableHeader().setBackground(PRIMARY_COLOR);
-        table.getTableHeader().setForeground(Color.WHITE);
+        table.getTableHeader().setDefaultRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable t, Object value,
+                                                           boolean isSelected, boolean hasFocus, int row, int column) {
+                JLabel label = new JLabel(value.toString());
+                label.setOpaque(true);
+                label.setBackground(new Color(0x2E, 0x5C, 0x8A));
+                label.setForeground(Color.WHITE);
+                label.setFont(new Font("SansSerif", Font.BOLD, 13));
+                label.setHorizontalAlignment(SwingConstants.CENTER);
+                label.setBorder(BorderFactory.createLineBorder(new Color(0x25, 0x4A, 0x70)));
+                return label;
+            }
+        });
         table.setGridColor(new Color(0xDD, 0xDD, 0xDD));
         return table;
     }

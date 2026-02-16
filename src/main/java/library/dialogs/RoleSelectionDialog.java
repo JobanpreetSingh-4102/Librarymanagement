@@ -1,5 +1,7 @@
 package main.java.library.dialogs;
 
+import org.jetbrains.annotations.NotNull;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -53,8 +55,8 @@ public class RoleSelectionDialog extends JDialog {
         buttonPanel.setBackground(BACKGROUND_COLOR);
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
 
-        JButton studentBtn = createRoleButton("Student", "Access library resources,\nborrow books, and more", new Color(0x4C, 0xAF, 0x50));
-        JButton staffBtn = createRoleButton("Staff", "Manage books, members,\nand library operations", PRIMARY_COLOR);
+        JButton studentBtn = createRoleButton ("Student","", PRIMARY_COLOR);
+        JButton staffBtn = createRoleButton("Staff", "", PRIMARY_COLOR);
 
         studentBtn.addActionListener(e -> {
             selectedRole = "Student";

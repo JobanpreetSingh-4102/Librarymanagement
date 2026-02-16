@@ -18,7 +18,7 @@ public class LibraryApp extends JFrame {
     public LibraryApp(String role) {
         this.userRole = role;
 
-        setTitle("Library Management  - " + role + " Portal");
+        setTitle("Library Management System - " + role + " Portal");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1100, 750);
         setMinimumSize(new Dimension(900, 650));

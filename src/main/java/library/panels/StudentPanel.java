@@ -28,17 +28,16 @@ public class StudentPanel extends JPanel {
     public StudentPanel() {
         dataManager = DataManager.getInstance();
         setLayout(new BorderLayout());
-        setBackground(SECONDARY_COLOR);
+        setBackground(BACKGROUND_COLOR);
 
         tabbedPane = new JTabbedPane();
         tabbedPane.setFont(new Font("SansSerif", Font.BOLD, 13));
 
         tabbedPane.addTab("Search Books", createSearchBooksPanel());
         tabbedPane.addTab("My Books", createMyBooksPanel());
-
+        tabbedPane.addTab("E-Books", createEbooksPanel());
         tabbedPane.addTab("Request Book", createRequestBookPanel());
         tabbedPane.addTab("Library Info", createLibraryInfoPanel());
-
 
         add(tabbedPane, BorderLayout.CENTER);
     }
@@ -60,7 +59,6 @@ public class StudentPanel extends JPanel {
         searchPanel.add(clearBtn);
 
         String[] columns = {"ID", "Title", "Author", "Section", "Shelf", "Available", "Status"};
-
         DefaultTableModel tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) { return false; }
@@ -156,7 +154,59 @@ public class StudentPanel extends JPanel {
         return panel;
     }
 
+    private JPanel createEbooksPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBackground(BACKGROUND_COLOR);
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
+        JLabel headerLabel = new JLabel("Available E-Books for Download");
+        headerLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
+        headerLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+
+        String[] columns = {"ID", "Title", "Author", "Section", "Action"};
+        DefaultTableModel tableModel = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) { return column == 4; }
+        };
+        JTable table = createStyledTable(tableModel);
+
+        List<Book> ebooks = dataManager.getEbooks();
+        for (Book book : ebooks) {
+            tableModel.addRow(new Object[]{
+                    book.getId(), book.getTitle(), book.getAuthor(), book.getSection(), "Download"
+            });
+        }
+
+        table.getColumnModel().getColumn(4).setCellRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value,
+                                                           boolean isSelected, boolean hasFocus, int row, int column) {
+                JButton btn = new JButton("Download");
+                btn.setBackground(AVAILABLE_COLOR);
+                btn.setForeground(Color.WHITE);
+                btn.setBorderPainted(false);
+                return btn;
+            }
+        });
+
+        table.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                int col = table.columnAtPoint(e.getPoint());
+                int row = table.rowAtPoint(e.getPoint());
+                if (col == 4 && row >= 0) {
+                    String title = (String) tableModel.getValueAt(row, 1);
+                    JOptionPane.showMessageDialog(panel,
+                            "Download started for: " + title + "\n(Simulated - actual download would occur here)",
+                            "E-Book Download", JOptionPane.INFORMATION_MESSAGE);
+                }
+            }
+        });
+
+        panel.add(headerLabel, BorderLayout.NORTH);
+        panel.add(new JScrollPane(table), BorderLayout.CENTER);
+        return panel;
+    }
 
     private JPanel createRequestBookPanel() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
@@ -305,20 +355,8 @@ public class StudentPanel extends JPanel {
         JTable table = new JTable(model);
         table.setRowHeight(28);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.getTableHeader().setDefaultRenderer(new DefaultTableCellRenderer() {
-            @Override
-            public Component getTableCellRendererComponent(JTable t, Object value,
-                                                           boolean isSelected, boolean hasFocus, int row, int column) {
-                JLabel label = new JLabel(value.toString());
-                label.setOpaque(true);
-                label.setBackground(new Color(0x2E, 0x5C, 0x8A));
-                label.setForeground(Color.WHITE);
-                label.setFont(new Font("SansSerif", Font.BOLD, 13));
-                label.setHorizontalAlignment(SwingConstants.CENTER);
-                label.setBorder(BorderFactory.createLineBorder(new Color(0x25, 0x4A, 0x70)));
-                return label;
-            }
-        });
+        table.getTableHeader().setBackground(PRIMARY_COLOR);
+        table.getTableHeader().setForeground(Color.WHITE);
         table.setGridColor(new Color(0xDD, 0xDD, 0xDD));
         return table;
     }

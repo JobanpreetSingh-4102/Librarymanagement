@@ -10,6 +10,7 @@ import main.java.library.utils.DataManager;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -61,7 +62,9 @@ public class StudentPanel extends JPanel {
         String[] columns = {"ID", "Title", "Author", "Section", "Shelf", "Available", "Status"};
         DefaultTableModel tableModel = new DefaultTableModel(columns, 0) {
             @Override
-            public boolean isCellEditable(int row, int column) { return false; }
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
         };
         JTable table = createStyledTable(tableModel);
 
@@ -93,7 +96,10 @@ public class StudentPanel extends JPanel {
         };
 
         searchBtn.addActionListener(e -> refreshTable.run());
-        clearBtn.addActionListener(e -> { searchField.setText(""); refreshTable.run(); });
+        clearBtn.addActionListener(e -> {
+            searchField.setText("");
+            refreshTable.run();
+        });
         refreshTable.run();
 
         panel.add(searchPanel, BorderLayout.NORTH);
@@ -119,7 +125,9 @@ public class StudentPanel extends JPanel {
         String[] columns = {"Book Title", "Author", "Borrow Date", "Due Date", "Status"};
         DefaultTableModel tableModel = new DefaultTableModel(columns, 0) {
             @Override
-            public boolean isCellEditable(int row, int column) { return false; }
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
         };
         JTable table = createStyledTable(tableModel);
 
@@ -166,7 +174,9 @@ public class StudentPanel extends JPanel {
         String[] columns = {"ID", "Title", "Author", "Section", "Action"};
         DefaultTableModel tableModel = new DefaultTableModel(columns, 0) {
             @Override
-            public boolean isCellEditable(int row, int column) { return column == 4; }
+            public boolean isCellEditable(int row, int column) {
+                return column == 4;
+            }
         };
         JTable table = createStyledTable(tableModel);
 
@@ -225,23 +235,27 @@ public class StudentPanel extends JPanel {
         reasonArea.setLineWrap(true);
         reasonArea.setWrapStyleWord(true);
 
-        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
         formPanel.add(new JLabel("Book Title:"), gbc);
         gbc.gridx = 1;
         formPanel.add(titleField, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 1;
+        gbc.gridx = 0;
+        gbc.gridy = 1;
         formPanel.add(new JLabel("Author Name:"), gbc);
         gbc.gridx = 1;
         formPanel.add(authorField, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 2;
+        gbc.gridx = 0;
+        gbc.gridy = 2;
         gbc.anchor = GridBagConstraints.NORTHWEST;
         formPanel.add(new JLabel("Reason (optional):"), gbc);
         gbc.gridx = 1;
         formPanel.add(new JScrollPane(reasonArea), gbc);
 
-        gbc.gridx = 1; gbc.gridy = 3;
+        gbc.gridx = 1;
+        gbc.gridy = 3;
         gbc.anchor = GridBagConstraints.CENTER;
         JButton submitBtn = createButton("Submit Request", AVAILABLE_COLOR);
         formPanel.add(submitBtn, gbc);
@@ -355,9 +369,25 @@ public class StudentPanel extends JPanel {
         JTable table = new JTable(model);
         table.setRowHeight(28);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        JTableHeader header = table.getTableHeader();
+        header.setOpaque(true);
         table.getTableHeader().setBackground(PRIMARY_COLOR);
         table.getTableHeader().setForeground(Color.WHITE);
+
+        header.setFont(new Font("SansSerif", Font.BOLD, 14));
+        DefaultTableCellRenderer headerRenderer =
+                (DefaultTableCellRenderer) header.getDefaultRenderer();
+        headerRenderer.setHorizontalAlignment(JLabel.CENTER);
+        headerRenderer.setBackground(PRIMARY_COLOR);
+        headerRenderer.setFont(new Font("SansSerif", Font.BOLD, 14));
+
         table.setGridColor(new Color(0xDD, 0xDD, 0xDD));
         return table;
+
     }
+
+
+
 }
+

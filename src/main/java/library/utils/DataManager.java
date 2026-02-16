@@ -79,7 +79,11 @@ public class DataManager {
         book.borrowCopy();
     }
 
-    public List<Book> getBooks() { return new ArrayList<>(books); }
+    public List<Book> getBooks() {
+        return new ArrayList<>(books);
+    }
+
+
     public List<Member> getMembers() { return new ArrayList<>(members); }
     public List<Transaction> getTransactions() { return new ArrayList<>(transactions); }
     public List<BookRequest> getBookRequests() { return new ArrayList<>(bookRequests); }

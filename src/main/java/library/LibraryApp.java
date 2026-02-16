@@ -20,14 +20,15 @@ public class LibraryApp extends JFrame {
 
         setTitle("Library Management  - " + role + " Portal");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1100, 750);
-        setMinimumSize(new Dimension(900, 650));
-        setLocationRelativeTo(null);
 
         getContentPane().setBackground(BACKGROUND_COLOR);
 
         createMenuBar();
         createMainContent();
+
+        pack();
+        setLocationRelativeTo(null);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
 
         setVisible(true);
     }
@@ -87,6 +88,8 @@ public class LibraryApp extends JFrame {
     private JPanel createHeaderPanel() {
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(PRIMARY_COLOR);
+
+        headerPanel.setPreferredSize(new Dimension(100, 90));
         headerPanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
 
         JLabel titleLabel = new JLabel("Library Management System");
@@ -98,11 +101,12 @@ public class LibraryApp extends JFrame {
                 : "Staff Portal - Manage books, members, and library operations";
 
         JLabel subtitleLabel = new JLabel(subtitle);
-        subtitleLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        subtitleLabel.setFont(new Font("SansSerif", Font.PLAIN, 13));
         subtitleLabel.setForeground(new Color(0xCC, 0xDD, 0xEE));
 
         JPanel titlePanel = new JPanel(new GridLayout(2, 1));
         titlePanel.setOpaque(false);
+
         titlePanel.add(titleLabel);
         titlePanel.add(subtitleLabel);
 

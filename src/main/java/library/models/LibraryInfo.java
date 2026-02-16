@@ -11,10 +11,10 @@ public class LibraryInfo {
     private int maxBooksPerStudent;
 
     public LibraryInfo() {
-        this.name = "Central Public Library";
-        this.address = "123 Library Street, Knowledge City, KC 12345";
-        this.phone = "+1 (555) 123-4567";
-        this.email = "info@centrallibrary.edu";
+        this.name = "University Library Heidelberg";
+        this.address = "Heidelberg, Germany";
+        this.phone = "+49 176 296 13484";
+        this.email = "info@universitylibrary-heidelberg.de";
         this.mondayToFriday = "8:00 AM - 8:00 PM";
         this.saturday = "9:00 AM - 5:00 PM";
         this.sunday = "Closed";

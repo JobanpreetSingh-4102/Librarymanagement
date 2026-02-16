@@ -4,7 +4,7 @@ CREATE TABLE books (
     book_id int PRIMARY KEY,
     booktitle CHAR,
     available int not null,
-    ebooks CHAR(5) not null,
+    ebooks Boolean not null,
     author CHAR,
     ISBN CHAR not null,
     QTY int not null,

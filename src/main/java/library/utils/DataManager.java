@@ -31,6 +31,7 @@ public class DataManager {
         bookRequests = new ArrayList<>();
         libraryInfo = new LibraryInfo();
         initializeSampleData();
+        generateBooks(10000);
     }
 
     public static DataManager getInstance() {
@@ -96,6 +97,68 @@ public class DataManager {
         if (book.getId() == 0) book.setId(nextBookId++);
         books.add(book);
     }
+
+    public void generateBooks(int count) {
+
+        String[] adjectives = {
+                "Lost", "Hidden", "Dark", "Silent", "Golden",
+                "Broken", "Forgotten", "Secret", "Eternal", "Last"
+        };
+
+        String[] nouns = {
+                "Kingdom", "Forest", "Ocean", "Empire", "Dream",
+                "Journey", "Shadow", "City", "Legend", "Library"
+        };
+
+        String[] authorsFirst = {
+                "John", "Emma", "Michael", "Sophia", "David",
+                "Olivia", "James", "Isabella", "Daniel", "Mia"
+        };
+
+        String[] authorsLast = {
+                "Smith", "Johnson", "Brown", "Taylor", "Anderson",
+                "Thomas", "Moore", "Martin", "Jackson", "White"
+        };
+
+        String[] sections = {
+                "Fiction", "Science", "History", "Romance",
+                "Technology", "Fantasy", "Philosophy"
+        };
+
+        for (int i = 1; i <= count; i++) {
+
+            String title =
+                    "The " +
+                            adjectives[i % adjectives.length] +
+                            " " +
+                            nouns[i % nouns.length] +
+                            " " + i;
+
+
+            String author =
+                    authorsFirst[i % authorsFirst.length] + " " +
+                            authorsLast[i % authorsLast.length];
+
+
+            String section = sections[i % sections.length];
+            String shelf ="" + (char)('A' + (i % 6)) + (1 + (i % 50));
+
+            books.add(new Book(
+                    i,
+                    title,
+                    author,
+                    "978000" + i,
+                    true,
+                    section,
+                    shelf,
+                    5,
+                    5,
+                    false,
+                    null
+            ));
+        }
+    }
+
 
     public void updateBook(Book book) {
         for (int i = 0; i < books.size(); i++) {

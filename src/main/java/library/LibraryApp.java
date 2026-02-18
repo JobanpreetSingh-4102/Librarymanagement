@@ -7,11 +7,11 @@ import main.java.library.panels.StaffPanel;
 
 import javax.swing.*;
 import java.awt.*;
+import java.net.URL;
 
 public class LibraryApp extends JFrame {
     private String userRole;
     private JPanel contentPanel;
-
     private static final Color PRIMARY_COLOR = new Color(0x2E, 0x5C, 0x8A);
     private static final Color BACKGROUND_COLOR = new Color(0xF0, 0xF0, 0xF0);
 
@@ -20,48 +20,20 @@ public class LibraryApp extends JFrame {
 
         setTitle("Library Management System - " + role + " Portal");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(1100, 750);
+        setMinimumSize(new Dimension(900, 650));
+        setLocationRelativeTo(null);
+
+        URL iconURL = getClass().getResource("/library/resources/logo.png");
+        if (iconURL != null) {
+            setIconImage(new ImageIcon(iconURL).getImage());
+        }
 
         getContentPane().setBackground(BACKGROUND_COLOR);
 
-        createMenuBar();
         createMainContent();
 
-        pack();
-        setLocationRelativeTo(null);
-        setExtendedState(JFrame.MAXIMIZED_BOTH);
-
         setVisible(true);
-    }
-
-    private void createMenuBar() {
-        JMenuBar menuBar = new JMenuBar();
-        menuBar.setBackground(PRIMARY_COLOR);
-
-        JMenu fileMenu = new JMenu("File");
-        fileMenu.setForeground(Color.WHITE);
-
-        JMenuItem switchRoleItem = new JMenuItem("Switch Role");
-        switchRoleItem.addActionListener(e -> switchRole());
-
-        JMenuItem exitItem = new JMenuItem("Exit");
-        exitItem.addActionListener(e -> System.exit(0));
-
-        fileMenu.add(switchRoleItem);
-        fileMenu.addSeparator();
-        fileMenu.add(exitItem);
-
-        JMenu helpMenu = new JMenu("Help");
-        helpMenu.setForeground(Color.WHITE);
-
-        JMenuItem aboutItem = new JMenuItem("About");
-        aboutItem.addActionListener(e -> showAboutDialog());
-
-        helpMenu.add(aboutItem);
-
-        menuBar.add(fileMenu);
-        menuBar.add(helpMenu);
-
-        setJMenuBar(menuBar);
     }
 
     private void createMainContent() {
@@ -88,8 +60,6 @@ public class LibraryApp extends JFrame {
     private JPanel createHeaderPanel() {
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(PRIMARY_COLOR);
-
-        headerPanel.setPreferredSize(new Dimension(100, 90));
         headerPanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
 
         JLabel titleLabel = new JLabel("Library Management System");
@@ -101,24 +71,37 @@ public class LibraryApp extends JFrame {
                 : "Staff Portal - Manage books, members, and library operations";
 
         JLabel subtitleLabel = new JLabel(subtitle);
-        subtitleLabel.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        subtitleLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
         subtitleLabel.setForeground(new Color(0xCC, 0xDD, 0xEE));
 
         JPanel titlePanel = new JPanel(new GridLayout(2, 1));
         titlePanel.setOpaque(false);
-
         titlePanel.add(titleLabel);
         titlePanel.add(subtitleLabel);
 
-        JLabel roleLabel = new JLabel("Logged in as: " + userRole);
-        roleLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
-        roleLabel.setForeground(Color.WHITE);
-        roleLabel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Color.WHITE, 1),
-                BorderFactory.createEmptyBorder(5, 15, 5, 15)));
+        JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        rightPanel.setOpaque(false);
+
+        JLabel roleLabel = new JLabel(userRole + " Portal");
+        roleLabel.setFont(new Font("SansSerif", Font.BOLD, 13));
+        roleLabel.setForeground(new Color(0xCC, 0xDD, 0xEE));
+
+        JButton switchBtn = new JButton("Switch Role");
+        switchBtn.setFont(new Font("SansSerif", Font.BOLD, 12));
+        switchBtn.setBackground(new Color(0xFF, 0xFF, 0xFF));
+        switchBtn.setForeground(PRIMARY_COLOR);
+        switchBtn.setFocusPainted(false);
+        switchBtn.setBorderPainted(false);
+        switchBtn.setOpaque(true);
+        switchBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        switchBtn.setBorder(BorderFactory.createEmptyBorder(6, 16, 6, 16));
+        switchBtn.addActionListener(e -> switchRole());
+
+        rightPanel.add(roleLabel);
+        rightPanel.add(switchBtn);
 
         headerPanel.add(titlePanel, BorderLayout.WEST);
-        headerPanel.add(roleLabel, BorderLayout.EAST);
+        headerPanel.add(rightPanel, BorderLayout.EAST);
 
         return headerPanel;
     }
@@ -159,7 +142,7 @@ public class LibraryApp extends JFrame {
                 "Library Management System\n" +
                         "Version 2.0\n\n" +
                         "A comprehensive application for:\n" +
-                        "- Students: Search books, borrow, download e-books\n" +
+                        "- Students: Search books, borrow, request books\n" +
                         "- Staff: Manage books, members, transactions\n\n" +
                         "Built with Java Swing";
 

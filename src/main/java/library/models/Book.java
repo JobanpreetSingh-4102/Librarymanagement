@@ -7,30 +7,27 @@ public class Book {
     private String isbn;
     private boolean available;
     private String section;
+    private String genre;
     private String shelf;
     private int quantity;
     private int availableQuantity;
-    private boolean hasEbook;
-    private String ebookUrl;
 
     public Book(int id, String title, String author, String isbn, boolean available) {
-        this(id, title, author, isbn, available, "General", "A1", 1, 1, false, null);
+        this(id, title, author, isbn, available, "General", "General", "A1", 1, 1);
     }
 
     public Book(int id, String title, String author, String isbn, boolean available,
-                String section, String shelf, int quantity, int availableQuantity,
-                boolean hasEbook, String ebookUrl) {
+                String section, String genre, String shelf, int quantity, int availableQuantity) {
         this.id = id;
         this.title = title;
         this.author = author;
         this.isbn = isbn;
         this.available = available;
         this.section = section;
+        this.genre = genre;
         this.shelf = shelf;
         this.quantity = quantity;
         this.availableQuantity = availableQuantity;
-        this.hasEbook = hasEbook;
-        this.ebookUrl = ebookUrl;
     }
 
     public int getId() { return id; }
@@ -51,6 +48,9 @@ public class Book {
     public String getSection() { return section; }
     public void setSection(String section) { this.section = section; }
 
+    public String getGenre() { return genre; }
+    public void setGenre(String genre) { this.genre = genre; }
+
     public String getShelf() { return shelf; }
     public void setShelf(String shelf) { this.shelf = shelf; }
 
@@ -62,12 +62,6 @@ public class Book {
         this.availableQuantity = availableQuantity;
         this.available = availableQuantity > 0;
     }
-
-    public boolean hasEbook() { return hasEbook; }
-    public void setHasEbook(boolean hasEbook) { this.hasEbook = hasEbook; }
-
-    public String getEbookUrl() { return ebookUrl; }
-    public void setEbookUrl(String ebookUrl) { this.ebookUrl = ebookUrl; }
 
     public String getLocation() {
         return section + " - Shelf " + shelf;

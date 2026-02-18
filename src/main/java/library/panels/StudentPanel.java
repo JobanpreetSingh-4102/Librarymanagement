@@ -1,10 +1,6 @@
 package main.java.library.panels;
 
-import main.java.library.models.Book;
-import main.java.library.models.BookRequest;
-import main.java.library.models.LibraryInfo;
-import main.java.library.models.Member;
-import main.java.library.models.Transaction;
+import main.java.library.models.*;
 import main.java.library.utils.DataManager;
 
 import javax.swing.*;
@@ -23,6 +19,7 @@ public class StudentPanel extends JPanel {
     private static final Color SECONDARY_COLOR = new Color(0x5A, 0x9B, 0xD5);
     private static final Color AVAILABLE_COLOR = new Color(0x4C, 0xAF, 0x50);
     private static final Color WARNING_COLOR = new Color(0xFF, 0x98, 0x00);
+    private static final Color DANGER_COLOR = new Color(0xE5, 0x39, 0x35);
     private static final Color BACKGROUND_COLOR = new Color(0xF0, 0xF0, 0xF0);
 
     public StudentPanel() {
@@ -31,11 +28,12 @@ public class StudentPanel extends JPanel {
         setBackground(BACKGROUND_COLOR);
 
         tabbedPane = new JTabbedPane();
+        tabbedPane.setFocusable(false);
         tabbedPane.setFont(new Font("SansSerif", Font.BOLD, 13));
 
         tabbedPane.addTab("Search Books", createSearchBooksPanel());
         tabbedPane.addTab("My Books", createMyBooksPanel());
-
+        tabbedPane.addTab("Borrowing History", createBorrowingHistoryPanel());
         tabbedPane.addTab("Request Book", createRequestBookPanel());
         tabbedPane.addTab("Library Info", createLibraryInfoPanel());
 
@@ -49,23 +47,26 @@ public class StudentPanel extends JPanel {
 
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         searchPanel.setOpaque(false);
+
+        JComboBox<String> fieldCombo = new JComboBox<>(new String[]{"All", "Title", "Author", "ISBN", "Section", "Genre"});
         JTextField searchField = new JTextField(25);
         JButton searchBtn = createButton("Search", PRIMARY_COLOR);
         JButton clearBtn = createButton("Clear", SECONDARY_COLOR);
 
-        searchPanel.add(new JLabel("Search by title, author, or section:"));
+        searchPanel.add(new JLabel("Search by:"));
+        searchPanel.add(fieldCombo);
         searchPanel.add(searchField);
         searchPanel.add(searchBtn);
         searchPanel.add(clearBtn);
 
-        String[] columns = {"ID", "Title", "Author", "Section", "Shelf", "Available", "Status"};
+        String[] columns = {"ID", "Title", "Author", "Genre", "Section", "Shelf", "Available", "Status"};
         DefaultTableModel tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) { return false; }
         };
         JTable table = createStyledTable(tableModel);
 
-        table.getColumnModel().getColumn(6).setCellRenderer(new DefaultTableCellRenderer() {
+        table.getColumnModel().getColumn(7).setCellRenderer(new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value,
                                                            boolean isSelected, boolean hasFocus, int row, int column) {
@@ -81,11 +82,17 @@ public class StudentPanel extends JPanel {
         Runnable refreshTable = () -> {
             tableModel.setRowCount(0);
             String query = searchField.getText().trim();
-            List<Book> books = query.isEmpty() ? dataManager.getBooks() : dataManager.searchBooks(query);
+            String field = (String) fieldCombo.getSelectedItem();
+            List<Book> books;
+            if (query.isEmpty()) {
+                books = dataManager.getBooks();
+            } else {
+                books = dataManager.searchBooksByField(query, field);
+            }
             for (Book book : books) {
                 tableModel.addRow(new Object[]{
                         book.getId(), book.getTitle(), book.getAuthor(),
-                        book.getSection(), book.getShelf(),
+                        book.getGenre(), book.getSection(), book.getShelf(),
                         book.getAvailableQuantity() + "/" + book.getQuantity(),
                         book.getStatus()
                 });
@@ -93,7 +100,7 @@ public class StudentPanel extends JPanel {
         };
 
         searchBtn.addActionListener(e -> refreshTable.run());
-        clearBtn.addActionListener(e -> { searchField.setText(""); refreshTable.run(); });
+        clearBtn.addActionListener(e -> { searchField.setText(""); fieldCombo.setSelectedIndex(0); refreshTable.run(); });
         refreshTable.run();
 
         panel.add(searchPanel, BorderLayout.NORTH);
@@ -109,12 +116,15 @@ public class StudentPanel extends JPanel {
         Member currentUser = dataManager.getCurrentUser();
         int borrowed = dataManager.getMemberBorrowedCount(currentUser);
         int remaining = dataManager.getRemainingBorrowLimit(currentUser);
+        double totalFines = dataManager.getMemberTotalFines(currentUser);
 
         JPanel infoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 5));
         infoPanel.setOpaque(false);
         infoPanel.add(createInfoLabel("Currently Borrowed: " + borrowed, PRIMARY_COLOR));
         infoPanel.add(createInfoLabel("Can Borrow More: " + remaining, AVAILABLE_COLOR));
         infoPanel.add(createInfoLabel("Max Limit: " + dataManager.getLibraryInfo().getMaxBooksPerStudent(), SECONDARY_COLOR));
+        Color finesColor = totalFines > 0 ? DANGER_COLOR : AVAILABLE_COLOR;
+        infoPanel.add(createInfoLabel(String.format("Outstanding Fines: $%.2f", totalFines), finesColor));
 
         String[] columns = {"Book Title", "Author", "Borrow Date", "Due Date", "Status"};
         DefaultTableModel tableModel = new DefaultTableModel(columns, 0) {
@@ -130,7 +140,7 @@ public class StudentPanel extends JPanel {
                 Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                 if (!isSelected) {
                     String status = (String) value;
-                    if ("Overdue".equals(status)) c.setForeground(WARNING_COLOR);
+                    if (status.startsWith("Overdue")) c.setForeground(WARNING_COLOR);
                     else if ("Active".equals(status)) c.setForeground(SECONDARY_COLOR);
                     else c.setForeground(AVAILABLE_COLOR);
                 }
@@ -150,6 +160,73 @@ public class StudentPanel extends JPanel {
         }
 
         panel.add(infoPanel, BorderLayout.NORTH);
+        panel.add(new JScrollPane(table), BorderLayout.CENTER);
+        return panel;
+    }
+
+    private JPanel createBorrowingHistoryPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBackground(BACKGROUND_COLOR);
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        String[] columns = {"Book Title", "Author", "Borrow Date", "Due Date", "Return Date", "Status", "Fine"};
+        DefaultTableModel tableModel = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) { return false; }
+        };
+        JTable table = createStyledTable(tableModel);
+
+        table.getColumnModel().getColumn(5).setCellRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value,
+                                                           boolean isSelected, boolean hasFocus, int row, int column) {
+                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                if (!isSelected) {
+                    String status = (String) value;
+                    if (status.startsWith("Overdue")) c.setForeground(WARNING_COLOR);
+                    else if ("Returned".equals(status)) c.setForeground(AVAILABLE_COLOR);
+                    else if ("Active".equals(status)) c.setForeground(SECONDARY_COLOR);
+                    else c.setForeground(Color.BLACK);
+                }
+                setHorizontalAlignment(CENTER);
+                return c;
+            }
+        });
+
+        table.getColumnModel().getColumn(6).setCellRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value,
+                                                           boolean isSelected, boolean hasFocus, int row, int column) {
+                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                if (!isSelected) {
+                    String fineStr = (String) value;
+                    if (!"-".equals(fineStr)) c.setForeground(DANGER_COLOR);
+                    else c.setForeground(Color.BLACK);
+                }
+                setHorizontalAlignment(CENTER);
+                return c;
+            }
+        });
+
+        Member currentUser = dataManager.getCurrentUser();
+        List<Transaction> allTransactions = dataManager.getMemberAllTransactions(currentUser);
+        for (Transaction t : allTransactions) {
+            double fine = t.calculateFine();
+            tableModel.addRow(new Object[]{
+                    t.getBook().getTitle(), t.getBook().getAuthor(),
+                    t.getBorrowDate().format(dateFormatter),
+                    t.getDueDate().format(dateFormatter),
+                    t.isReturned() ? t.getReturnDate().format(dateFormatter) : "-",
+                    t.getStatus(),
+                    fine > 0 ? String.format("$%.2f", fine) : "-"
+            });
+        }
+
+        JLabel headerLabel = new JLabel("Complete Borrowing History");
+        headerLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
+        headerLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
+        panel.add(headerLabel, BorderLayout.NORTH);
         panel.add(new JScrollPane(table), BorderLayout.CENTER);
         return panel;
     }
@@ -301,21 +378,24 @@ public class StudentPanel extends JPanel {
         JTable table = new JTable(model);
         table.setRowHeight(28);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        table.getTableHeader().setReorderingAllowed(false);
+        table.getTableHeader().setPreferredSize(new Dimension(table.getTableHeader().getPreferredSize().width, 32));
         table.getTableHeader().setDefaultRenderer(new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable t, Object value,
                                                            boolean isSelected, boolean hasFocus, int row, int column) {
                 JLabel label = new JLabel(value.toString());
                 label.setOpaque(true);
-                label.setBackground(new Color(0x2E, 0x5C, 0x8A));
+                label.setBackground(PRIMARY_COLOR);
                 label.setForeground(Color.WHITE);
                 label.setFont(new Font("SansSerif", Font.BOLD, 13));
                 label.setHorizontalAlignment(SwingConstants.CENTER);
-                label.setBorder(BorderFactory.createLineBorder(new Color(0x25, 0x4A, 0x70)));
+                label.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 1, new Color(0x25, 0x4A, 0x70)));
                 return label;
             }
         });
         table.setGridColor(new Color(0xDD, 0xDD, 0xDD));
+        table.setFont(new Font("SansSerif", Font.PLAIN, 12));
         return table;
     }
 }

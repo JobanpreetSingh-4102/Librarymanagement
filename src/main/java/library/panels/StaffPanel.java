@@ -11,6 +11,8 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -25,6 +27,8 @@ public class StaffPanel extends JPanel {
     private DefaultTableModel transactionsTableModel;
     private DefaultTableModel requestsTableModel;
 
+    private JPanel reportsPanel;
+
     private static final Color PRIMARY_COLOR = new Color(0x2E, 0x5C, 0x8A);
     private static final Color SECONDARY_COLOR = new Color(0x5A, 0x9B, 0xD5);
     private static final Color AVAILABLE_COLOR = new Color(0x4C, 0xAF, 0x50);
@@ -38,6 +42,7 @@ public class StaffPanel extends JPanel {
         setBackground(BACKGROUND_COLOR);
 
         tabbedPane = new JTabbedPane();
+        tabbedPane.setFocusable(false);
         tabbedPane.setFont(new Font("SansSerif", Font.BOLD, 13));
 
         tabbedPane.addTab("Books", createBooksPanel());
@@ -59,6 +64,7 @@ public class StaffPanel extends JPanel {
             case 1: refreshMembersTable(); break;
             case 2: refreshTransactionsTable(); break;
             case 3: refreshRequestsTable(); break;
+            case 4: refreshReportsPanel(); break;
         }
     }
 
@@ -77,7 +83,7 @@ public class StaffPanel extends JPanel {
         buttonPanel.add(editBtn);
         buttonPanel.add(deleteBtn);
 
-        String[] columns = {"ID", "Title", "Author", "ISBN", "Section", "Shelf", "Qty", "Available", "E-Book"};
+        String[] columns = {"ID", "Title", "Author", "ISBN", "Genre", "Section", "Shelf", "Qty", "Available"};
         booksTableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) { return false; }
@@ -101,8 +107,8 @@ public class StaffPanel extends JPanel {
         for (Book book : dataManager.getBooks()) {
             booksTableModel.addRow(new Object[]{
                     book.getId(), book.getTitle(), book.getAuthor(), book.getIsbn(),
-                    book.getSection(), book.getShelf(), book.getQuantity(),
-                    book.getAvailableQuantity(), book.hasEbook() ? "Yes" : "No"
+                    book.getGenre(), book.getSection(), book.getShelf(),
+                    book.getQuantity(), book.getAvailableQuantity()
             });
         }
     }
@@ -110,7 +116,7 @@ public class StaffPanel extends JPanel {
     private void showAddBookDialog() {
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Add New Book", true);
         dialog.setLayout(new BorderLayout(10, 10));
-        dialog.setSize(450, 400);
+        dialog.setSize(450, 420);
         dialog.setLocationRelativeTo(this);
 
         JPanel formPanel = new JPanel(new GridLayout(8, 2, 10, 10));
@@ -119,10 +125,14 @@ public class StaffPanel extends JPanel {
         JTextField titleField = new JTextField();
         JTextField authorField = new JTextField();
         JTextField isbnField = new JTextField();
+        JComboBox<String> genreCombo = new JComboBox<>();
+        genreCombo.setEditable(true);
+        for (String genre : dataManager.getGenres()) {
+            genreCombo.addItem(genre);
+        }
         JTextField sectionField = new JTextField("General");
         JTextField shelfField = new JTextField("A1");
         JSpinner quantitySpinner = new JSpinner(new SpinnerNumberModel(1, 1, 100, 1));
-        JCheckBox ebookCheck = new JCheckBox("Has E-Book");
 
         formPanel.add(new JLabel("Title:"));
         formPanel.add(titleField);
@@ -130,14 +140,14 @@ public class StaffPanel extends JPanel {
         formPanel.add(authorField);
         formPanel.add(new JLabel("ISBN:"));
         formPanel.add(isbnField);
+        formPanel.add(new JLabel("Genre:"));
+        formPanel.add(genreCombo);
         formPanel.add(new JLabel("Section:"));
         formPanel.add(sectionField);
         formPanel.add(new JLabel("Shelf:"));
         formPanel.add(shelfField);
         formPanel.add(new JLabel("Quantity:"));
         formPanel.add(quantitySpinner);
-        formPanel.add(new JLabel(""));
-        formPanel.add(ebookCheck);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         JButton saveBtn = createButton("Save", AVAILABLE_COLOR);
@@ -150,10 +160,11 @@ public class StaffPanel extends JPanel {
                 JOptionPane.showMessageDialog(dialog, "Title and Author are required", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
+            String genre = ((String) genreCombo.getSelectedItem()).trim();
+            if (genre.isEmpty()) genre = "General";
             int qty = (int) quantitySpinner.getValue();
             Book book = new Book(0, title, author, isbnField.getText().trim(), true,
-                    sectionField.getText().trim(), shelfField.getText().trim(), qty, qty,
-                    ebookCheck.isSelected(), ebookCheck.isSelected() ? title.toLowerCase().replace(" ", "") + ".pdf" : null);
+                    sectionField.getText().trim(), genre, shelfField.getText().trim(), qty, qty);
             dataManager.addBook(book);
             refreshBooksTable();
             dialog.dispose();
@@ -179,7 +190,7 @@ public class StaffPanel extends JPanel {
 
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Edit Book", true);
         dialog.setLayout(new BorderLayout(10, 10));
-        dialog.setSize(450, 400);
+        dialog.setSize(450, 420);
         dialog.setLocationRelativeTo(this);
 
         JPanel formPanel = new JPanel(new GridLayout(8, 2, 10, 10));
@@ -188,10 +199,15 @@ public class StaffPanel extends JPanel {
         JTextField titleField = new JTextField(book.getTitle());
         JTextField authorField = new JTextField(book.getAuthor());
         JTextField isbnField = new JTextField(book.getIsbn());
+        JComboBox<String> genreCombo = new JComboBox<>();
+        genreCombo.setEditable(true);
+        for (String genre : dataManager.getGenres()) {
+            genreCombo.addItem(genre);
+        }
+        genreCombo.setSelectedItem(book.getGenre());
         JTextField sectionField = new JTextField(book.getSection());
         JTextField shelfField = new JTextField(book.getShelf());
         JSpinner quantitySpinner = new JSpinner(new SpinnerNumberModel(book.getQuantity(), 1, 100, 1));
-        JCheckBox ebookCheck = new JCheckBox("Has E-Book", book.hasEbook());
 
         formPanel.add(new JLabel("Title:"));
         formPanel.add(titleField);
@@ -199,14 +215,14 @@ public class StaffPanel extends JPanel {
         formPanel.add(authorField);
         formPanel.add(new JLabel("ISBN:"));
         formPanel.add(isbnField);
+        formPanel.add(new JLabel("Genre:"));
+        formPanel.add(genreCombo);
         formPanel.add(new JLabel("Section:"));
         formPanel.add(sectionField);
         formPanel.add(new JLabel("Shelf:"));
         formPanel.add(shelfField);
         formPanel.add(new JLabel("Quantity:"));
         formPanel.add(quantitySpinner);
-        formPanel.add(new JLabel(""));
-        formPanel.add(ebookCheck);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         JButton saveBtn = createButton("Save", AVAILABLE_COLOR);
@@ -216,10 +232,12 @@ public class StaffPanel extends JPanel {
             book.setTitle(titleField.getText().trim());
             book.setAuthor(authorField.getText().trim());
             book.setIsbn(isbnField.getText().trim());
+            String genre = ((String) genreCombo.getSelectedItem()).trim();
+            if (genre.isEmpty()) genre = "General";
+            book.setGenre(genre);
             book.setSection(sectionField.getText().trim());
             book.setShelf(shelfField.getText().trim());
             book.setQuantity((int) quantitySpinner.getValue());
-            book.setHasEbook(ebookCheck.isSelected());
             dataManager.updateBook(book);
             refreshBooksTable();
             dialog.dispose();
@@ -420,9 +438,11 @@ public class StaffPanel extends JPanel {
         buttonPanel.setOpaque(false);
         JButton issueBtn = createButton("Issue Book", AVAILABLE_COLOR);
         JButton returnBtn = createButton("Return Book", SECONDARY_COLOR);
+        JButton collectFineBtn = createButton("Collect Fine", WARNING_COLOR);
 
         buttonPanel.add(issueBtn);
         buttonPanel.add(returnBtn);
+        buttonPanel.add(collectFineBtn);
 
         JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         filterPanel.setOpaque(false);
@@ -436,25 +456,23 @@ public class StaffPanel extends JPanel {
         topPanel.add(buttonPanel, BorderLayout.WEST);
         topPanel.add(filterPanel, BorderLayout.EAST);
 
-        String[] columns = {"ID", "Book", "Member", "Borrow Date", "Due Date", "Return Date", "Status"};
+        String[] columns = {"ID", "Book", "Member", "Borrow Date", "Due Date", "Return Date", "Fine", "Status"};
         transactionsTableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) { return false; }
         };
         JTable table = createStyledTable(transactionsTableModel);
 
-        table.getColumnModel().getColumn(6).setCellRenderer(new DefaultTableCellRenderer() {
+        table.getColumnModel().getColumn(7).setCellRenderer(new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value,
                                                            boolean isSelected, boolean hasFocus, int row, int column) {
                 Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                 if (!isSelected) {
                     String status = (String) value;
-                    switch (status) {
-                        case "Active": c.setForeground(SECONDARY_COLOR); break;
-                        case "Overdue": c.setForeground(WARNING_COLOR); break;
-                        case "Returned": c.setForeground(AVAILABLE_COLOR); break;
-                    }
+                    if (status.startsWith("Active")) c.setForeground(SECONDARY_COLOR);
+                    else if (status.startsWith("Overdue")) c.setForeground(WARNING_COLOR);
+                    else if (status.startsWith("Returned")) c.setForeground(AVAILABLE_COLOR);
                 }
                 setHorizontalAlignment(CENTER);
                 return c;
@@ -468,11 +486,13 @@ public class StaffPanel extends JPanel {
             else if (showActiveOnly.isSelected()) list = dataManager.getActiveTransactions();
             else list = dataManager.getTransactions();
             for (Transaction t : list) {
+                double fine = t.calculateFine();
+                String fineStr = fine > 0 ? String.format("$%.2f", fine) : "-";
                 transactionsTableModel.addRow(new Object[]{
                         t.getId(), t.getBook().getTitle(), t.getMember().getName(),
                         t.getBorrowDate().format(dateFormatter), t.getDueDate().format(dateFormatter),
                         t.getReturnDate() != null ? t.getReturnDate().format(dateFormatter) : "-",
-                        t.getStatus()
+                        fineStr, t.getStatus()
                 });
             }
         };
@@ -482,6 +502,7 @@ public class StaffPanel extends JPanel {
 
         issueBtn.addActionListener(e -> showIssueBookDialog(refreshFiltered));
         returnBtn.addActionListener(e -> returnSelectedBook(table, refreshFiltered));
+        collectFineBtn.addActionListener(e -> collectFine(table, refreshFiltered));
 
         refreshFiltered.run();
 
@@ -494,11 +515,13 @@ public class StaffPanel extends JPanel {
         if (transactionsTableModel == null) return;
         transactionsTableModel.setRowCount(0);
         for (Transaction t : dataManager.getTransactions()) {
+            double fine = t.calculateFine();
+            String fineStr = fine > 0 ? String.format("$%.2f", fine) : "-";
             transactionsTableModel.addRow(new Object[]{
                     t.getId(), t.getBook().getTitle(), t.getMember().getName(),
                     t.getBorrowDate().format(dateFormatter), t.getDueDate().format(dateFormatter),
                     t.getReturnDate() != null ? t.getReturnDate().format(dateFormatter) : "-",
-                    t.getStatus()
+                    fineStr, t.getStatus()
             });
         }
     }
@@ -572,8 +595,8 @@ public class StaffPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "Please select a transaction", "No Selection", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        String status = (String) transactionsTableModel.getValueAt(row, 6);
-        if ("Returned".equals(status)) {
+        String status = (String) transactionsTableModel.getValueAt(row, 7);
+        if (status.startsWith("Returned")) {
             JOptionPane.showMessageDialog(this, "Book already returned", "Error", JOptionPane.WARNING_MESSAGE);
             return;
         }
@@ -583,6 +606,35 @@ public class StaffPanel extends JPanel {
             dataManager.returnBook(t);
             onComplete.run();
             JOptionPane.showMessageDialog(this, "Book returned successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
+    private void collectFine(JTable table, Runnable onComplete) {
+        int row = table.getSelectedRow();
+        if (row < 0) {
+            JOptionPane.showMessageDialog(this, "Please select a transaction", "No Selection", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        int transactionId = (int) transactionsTableModel.getValueAt(row, 0);
+        Transaction t = dataManager.getTransactions().stream().filter(tr -> tr.getId() == transactionId).findFirst().orElse(null);
+        if (t == null) return;
+
+        double fine = t.calculateFine();
+        if (fine <= 0) {
+            JOptionPane.showMessageDialog(this, "No fine on this transaction", "Info", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        if (t.isFinePaid()) {
+            JOptionPane.showMessageDialog(this, "Fine already collected", "Info", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        int confirm = JOptionPane.showConfirmDialog(this,
+                String.format("Collect fine of $%.2f from %s?", fine, t.getMember().getName()),
+                "Collect Fine", JOptionPane.YES_NO_OPTION);
+        if (confirm == JOptionPane.YES_OPTION) {
+            t.payFine();
+            onComplete.run();
+            JOptionPane.showMessageDialog(this, "Fine collected successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
@@ -644,16 +696,84 @@ public class StaffPanel extends JPanel {
     }
 
     private JPanel createReportsPanel() {
-        JPanel panel = new JPanel(new GridLayout(2, 2, 20, 20));
-        panel.setBackground(BACKGROUND_COLOR);
-        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        reportsPanel = new JPanel(new BorderLayout(20, 20));
+        reportsPanel.setBackground(BACKGROUND_COLOR);
+        reportsPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        panel.add(createStatCard("Total Books", String.valueOf(dataManager.getTotalBooks()), PRIMARY_COLOR));
-        panel.add(createStatCard("Total Members", String.valueOf(dataManager.getTotalMembers()), SECONDARY_COLOR));
-        panel.add(createStatCard("Active Loans", String.valueOf(dataManager.getActiveLoansCount()), AVAILABLE_COLOR));
-        panel.add(createStatCard("Overdue Books", String.valueOf(dataManager.getOverdueCount()), WARNING_COLOR));
+        refreshReportsPanel();
 
-        return panel;
+        return reportsPanel;
+    }
+
+    private void refreshReportsPanel() {
+        if (reportsPanel == null) return;
+        reportsPanel.removeAll();
+
+        JPanel cardsPanel = new JPanel(new GridLayout(2, 3, 20, 20));
+        cardsPanel.setOpaque(false);
+
+        cardsPanel.add(createStatCard("Total Books", String.valueOf(dataManager.getTotalBooks()), PRIMARY_COLOR));
+        cardsPanel.add(createStatCard("Total Members", String.valueOf(dataManager.getTotalMembers()), SECONDARY_COLOR));
+        cardsPanel.add(createStatCard("Active Loans", String.valueOf(dataManager.getActiveLoansCount()), AVAILABLE_COLOR));
+        cardsPanel.add(createStatCard("Overdue Books", String.valueOf(dataManager.getOverdueCount()), WARNING_COLOR));
+        cardsPanel.add(createStatCard("Total Fines Collected", String.format("$%.2f", dataManager.getTotalFinesCollected()), AVAILABLE_COLOR));
+        cardsPanel.add(createStatCard("Outstanding Fines", String.format("$%.2f", dataManager.getTotalOutstandingFines()), DANGER_COLOR));
+
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        bottomPanel.setOpaque(false);
+        JButton exportBtn = createButton("Export Report", PRIMARY_COLOR);
+        exportBtn.addActionListener(e -> exportReport());
+        bottomPanel.add(exportBtn);
+
+        reportsPanel.add(cardsPanel, BorderLayout.CENTER);
+        reportsPanel.add(bottomPanel, BorderLayout.SOUTH);
+        reportsPanel.revalidate();
+        reportsPanel.repaint();
+    }
+
+    private void exportReport() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Save Report");
+        fileChooser.setSelectedFile(new java.io.File("library_report_" + LocalDate.now().format(dateFormatter) + ".txt"));
+        int result = fileChooser.showSaveDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            try (FileWriter writer = new FileWriter(fileChooser.getSelectedFile())) {
+                writer.write("=== Library Report ===\n");
+                writer.write("Date: " + LocalDate.now().format(dateFormatter) + "\n\n");
+                writer.write("Total Books: " + dataManager.getTotalBooks() + "\n");
+                writer.write("Total Members: " + dataManager.getTotalMembers() + "\n");
+                writer.write("Active Loans: " + dataManager.getActiveLoansCount() + "\n");
+                writer.write("Overdue Books: " + dataManager.getOverdueCount() + "\n");
+                writer.write(String.format("Total Fines Collected: $%.2f\n", dataManager.getTotalFinesCollected()));
+                writer.write(String.format("Outstanding Fines: $%.2f\n", dataManager.getTotalOutstandingFines()));
+                writer.write("\n=== Books ===\n");
+                for (Book b : dataManager.getBooks()) {
+                    writer.write(String.format("  %d. %s by %s [%s] - %s, Shelf %s (Qty: %d, Available: %d)\n",
+                            b.getId(), b.getTitle(), b.getAuthor(), b.getGenre(),
+                            b.getSection(), b.getShelf(), b.getQuantity(), b.getAvailableQuantity()));
+                }
+                writer.write("\n=== Members ===\n");
+                for (Member m : dataManager.getMembers()) {
+                    writer.write(String.format("  %d. %s (%s) - Borrowed: %d\n",
+                            m.getId(), m.getName(), m.getEmail(), dataManager.getMemberBorrowedCount(m)));
+                }
+                writer.write("\n=== Active Transactions ===\n");
+                for (Transaction t : dataManager.getActiveTransactions()) {
+                    writer.write(String.format("  %d. %s -> %s (Due: %s)\n",
+                            t.getId(), t.getBook().getTitle(), t.getMember().getName(),
+                            t.getDueDate().format(dateFormatter)));
+                }
+                writer.write("\n=== Overdue Transactions ===\n");
+                for (Transaction t : dataManager.getOverdueTransactions()) {
+                    writer.write(String.format("  %d. %s -> %s (Due: %s, Fine: $%.2f)\n",
+                            t.getId(), t.getBook().getTitle(), t.getMember().getName(),
+                            t.getDueDate().format(dateFormatter), t.calculateFine()));
+                }
+                JOptionPane.showMessageDialog(this, "Report exported successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(this, "Error exporting report: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }
 
     private JPanel createStatCard(String title, String value, Color color) {
@@ -753,21 +873,24 @@ public class StaffPanel extends JPanel {
         JTable table = new JTable(model);
         table.setRowHeight(28);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        table.getTableHeader().setReorderingAllowed(false);
+        table.getTableHeader().setPreferredSize(new Dimension(table.getTableHeader().getPreferredSize().width, 32));
         table.getTableHeader().setDefaultRenderer(new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable t, Object value,
                                                            boolean isSelected, boolean hasFocus, int row, int column) {
                 JLabel label = new JLabel(value.toString());
                 label.setOpaque(true);
-                label.setBackground(new Color(0x2E, 0x5C, 0x8A));
+                label.setBackground(PRIMARY_COLOR);
                 label.setForeground(Color.WHITE);
                 label.setFont(new Font("SansSerif", Font.BOLD, 13));
                 label.setHorizontalAlignment(SwingConstants.CENTER);
-                label.setBorder(BorderFactory.createLineBorder(new Color(0x25, 0x4A, 0x70)));
+                label.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 1, new Color(0x25, 0x4A, 0x70)));
                 return label;
             }
         });
         table.setGridColor(new Color(0xDD, 0xDD, 0xDD));
+        table.setFont(new Font("SansSerif", Font.PLAIN, 12));
         return table;
     }
 }

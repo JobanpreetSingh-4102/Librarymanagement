@@ -1,9 +1,9 @@
 package main.java.library.dialogs;
 
-import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.awt.*;
+import java.net.URL;
 
 public class RoleSelectionDialog extends JDialog {
     private String selectedRole = null;
@@ -19,6 +19,11 @@ public class RoleSelectionDialog extends JDialog {
         setSize(450, 350);
         setLocationRelativeTo(null);
         setResizable(false);
+
+        URL iconURL = getClass().getResource("logo.png");
+        if (iconURL != null) {
+            setIconImage(new ImageIcon(iconURL).getImage());
+        }
 
         getContentPane().setBackground(BACKGROUND_COLOR);
         setLayout(new BorderLayout());
@@ -109,3 +114,4 @@ public class RoleSelectionDialog extends JDialog {
         return dialog.getSelectedRole();
     }
 }
+

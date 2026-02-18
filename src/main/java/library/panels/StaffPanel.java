@@ -5,6 +5,7 @@ import main.java.library.models.BookRequest;
 import main.java.library.models.LibraryInfo;
 import main.java.library.models.Member;
 import main.java.library.models.Transaction;
+import main.java.library.utils.BackgroundPanel;
 import main.java.library.utils.DataManager;
 
 import javax.swing.*;
@@ -69,8 +70,7 @@ public class StaffPanel extends JPanel {
     }
 
     private JPanel createBooksPanel() {
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
-        panel.setBackground(BACKGROUND_COLOR);
+        JPanel panel = new BackgroundPanel(new BorderLayout(10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -268,8 +268,7 @@ public class StaffPanel extends JPanel {
     }
 
     private JPanel createMembersPanel() {
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
-        panel.setBackground(BACKGROUND_COLOR);
+        JPanel panel = new BackgroundPanel(new BorderLayout(10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -427,8 +426,7 @@ public class StaffPanel extends JPanel {
     }
 
     private JPanel createTransactionsPanel() {
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
-        panel.setBackground(BACKGROUND_COLOR);
+        JPanel panel = new BackgroundPanel(new BorderLayout(10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         JPanel topPanel = new JPanel(new BorderLayout());
@@ -632,6 +630,7 @@ public class StaffPanel extends JPanel {
                 String.format("Collect fine of $%.2f from %s?", fine, t.getMember().getName()),
                 "Collect Fine", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
+            dataManager.collectFine(t.getId());
             t.payFine();
             onComplete.run();
             JOptionPane.showMessageDialog(this, "Fine collected successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
@@ -639,8 +638,7 @@ public class StaffPanel extends JPanel {
     }
 
     private JPanel createRequestsPanel() {
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
-        panel.setBackground(BACKGROUND_COLOR);
+        JPanel panel = new BackgroundPanel(new BorderLayout(10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -686,18 +684,17 @@ public class StaffPanel extends JPanel {
             return;
         }
         int requestId = (int) requestsTableModel.getValueAt(row, 0);
-        BookRequest request = dataManager.getBookRequests().stream().filter(r -> r.getId() == requestId).findFirst().orElse(null);
-        if (request != null && request.isPending()) {
-            if (approve) request.approve();
-            else request.reject();
+        String currentStatus = (String) requestsTableModel.getValueAt(row, 5);
+        if ("Pending".equals(currentStatus)) {
+            String newStatus = approve ? "Approved" : "Rejected";
+            dataManager.updateBookRequestStatus(requestId, newStatus);
             refreshRequestsTable();
             JOptionPane.showMessageDialog(this, "Request " + (approve ? "approved" : "rejected") + "!", "Success", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
     private JPanel createReportsPanel() {
-        reportsPanel = new JPanel(new BorderLayout(20, 20));
-        reportsPanel.setBackground(BACKGROUND_COLOR);
+        reportsPanel = new BackgroundPanel(new BorderLayout(20, 20));
         reportsPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         refreshReportsPanel();
@@ -797,8 +794,7 @@ public class StaffPanel extends JPanel {
     }
 
     private JPanel createSettingsPanel() {
-        JPanel panel = new JPanel(new BorderLayout(20, 20));
-        panel.setBackground(BACKGROUND_COLOR);
+        JPanel panel = new BackgroundPanel(new BorderLayout(20, 20));
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         LibraryInfo info = dataManager.getLibraryInfo();
@@ -842,6 +838,7 @@ public class StaffPanel extends JPanel {
             info.setSaturday(satField.getText().trim());
             info.setSunday(sunField.getText().trim());
             info.setMaxBooksPerStudent((int) maxBooksSpinner.getValue());
+            dataManager.updateLibraryInfo(info);
             JOptionPane.showMessageDialog(panel, "Settings saved!", "Success", JOptionPane.INFORMATION_MESSAGE);
         });
 

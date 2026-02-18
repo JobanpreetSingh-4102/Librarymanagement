@@ -1,6 +1,11 @@
 package main.java.library.panels;
 
-import main.java.library.models.*;
+import main.java.library.models.Book;
+import main.java.library.models.BookRequest;
+import main.java.library.models.LibraryInfo;
+import main.java.library.models.Member;
+import main.java.library.models.Transaction;
+import main.java.library.utils.BackgroundPanel;
 import main.java.library.utils.DataManager;
 
 import javax.swing.*;
@@ -41,8 +46,7 @@ public class StudentPanel extends JPanel {
     }
 
     private JPanel createSearchBooksPanel() {
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
-        panel.setBackground(BACKGROUND_COLOR);
+        JPanel panel = new BackgroundPanel(new BorderLayout(10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -109,8 +113,7 @@ public class StudentPanel extends JPanel {
     }
 
     private JPanel createMyBooksPanel() {
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
-        panel.setBackground(BACKGROUND_COLOR);
+        JPanel panel = new BackgroundPanel(new BorderLayout(10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         Member currentUser = dataManager.getCurrentUser();
@@ -165,8 +168,7 @@ public class StudentPanel extends JPanel {
     }
 
     private JPanel createBorrowingHistoryPanel() {
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
-        panel.setBackground(BACKGROUND_COLOR);
+        JPanel panel = new BackgroundPanel(new BorderLayout(10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         String[] columns = {"Book Title", "Author", "Borrow Date", "Due Date", "Return Date", "Status", "Fine"};
@@ -232,8 +234,7 @@ public class StudentPanel extends JPanel {
     }
 
     private JPanel createRequestBookPanel() {
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
-        panel.setBackground(BACKGROUND_COLOR);
+        JPanel panel = new BackgroundPanel(new BorderLayout(10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         JPanel formPanel = new JPanel(new GridBagLayout());
@@ -299,8 +300,7 @@ public class StudentPanel extends JPanel {
     }
 
     private JPanel createLibraryInfoPanel() {
-        JPanel panel = new JPanel(new BorderLayout(20, 20));
-        panel.setBackground(BACKGROUND_COLOR);
+        JPanel panel = new BackgroundPanel(new BorderLayout(20, 20));
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         LibraryInfo info = dataManager.getLibraryInfo();

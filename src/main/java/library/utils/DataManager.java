@@ -18,11 +18,11 @@ public class DataManager {
     private List<Transaction> transactions;
     private List<BookRequest> bookRequests;
     private LibraryInfo libraryInfo;
+    private Member currentUser;
     private int nextBookId = 1;
     private int nextMemberId = 1;
     private int nextTransactionId = 1;
     private int nextRequestId = 1;
-    private Member currentUser;
 
     private DataManager() {
         books = new ArrayList<>();
@@ -30,7 +30,10 @@ public class DataManager {
         transactions = new ArrayList<>();
         bookRequests = new ArrayList<>();
         libraryInfo = new LibraryInfo();
-        initializeSampleData();
+        loadSampleData();
+        if (!members.isEmpty()) {
+            currentUser = members.get(0);
+        }
     }
 
     public static DataManager getInstance() {
@@ -40,56 +43,63 @@ public class DataManager {
         return instance;
     }
 
-    private void initializeSampleData() {
-        addBook(new Book(nextBookId++, "The Great Gatsby", "F. Scott Fitzgerald", "978-0743273565", true,
-                "Fiction", "Fiction", "A1", 3, 3));
-        addBook(new Book(nextBookId++, "To Kill a Mockingbird", "Harper Lee", "978-0061120084", true,
-                "Fiction", "Fiction", "A2", 2, 2));
-        addBook(new Book(nextBookId++, "1984", "George Orwell", "978-0451524935", true,
-                "Science Fiction", "Science Fiction", "B1", 4, 4));
-        addBook(new Book(nextBookId++, "Pride and Prejudice", "Jane Austen", "978-0141439518", true,
-                "Romance", "Romance", "C1", 2, 2));
-        addBook(new Book(nextBookId++, "The Catcher in the Rye", "J.D. Salinger", "978-0316769488", true,
-                "Fiction", "Fiction", "A3", 3, 3));
-        addBook(new Book(nextBookId++, "Introduction to Algorithms", "Thomas Cormen", "978-0262033848", true,
-                "Computer Science", "Computer Science", "D1", 5, 5));
-        addBook(new Book(nextBookId++, "Clean Code", "Robert C. Martin", "978-0132350884", true,
-                "Computer Science", "Computer Science", "D2", 3, 3));
-        addBook(new Book(nextBookId++, "The Art of War", "Sun Tzu", "978-1599869773", true,
-                "History", "History", "E1", 2, 2));
+    private void loadSampleData() {
+        addBook(new Book(0, "To Kill a Mockingbird", "Harper Lee", "978-0061120084", true, "Fiction", "Classic Fiction", "A1", 3, 3));
+        addBook(new Book(0, "1984", "George Orwell", "978-0451524935", true, "Fiction", "Dystopian", "A2", 2, 2));
+        addBook(new Book(0, "The Great Gatsby", "F. Scott Fitzgerald", "978-0743273565", true, "Fiction", "Classic Fiction", "A1", 2, 2));
+        addBook(new Book(0, "Pride and Prejudice", "Jane Austen", "978-0141439518", true, "Fiction", "Romance", "A3", 2, 2));
+        addBook(new Book(0, "The Catcher in the Rye", "J.D. Salinger", "978-0316769488", true, "Fiction", "Coming of Age", "A2", 1, 1));
+        addBook(new Book(0, "Introduction to Algorithms", "Thomas H. Cormen", "978-0262033848", true, "Academic", "Computer Science", "B1", 3, 3));
+        addBook(new Book(0, "Clean Code", "Robert C. Martin", "978-0132350884", true, "Academic", "Software Engineering", "B2", 2, 2));
+        addBook(new Book(0, "A Brief History of Time", "Stephen Hawking", "978-0553380163", true, "Science", "Physics", "C1", 2, 2));
 
-        addMember(new Member(nextMemberId++, "John Smith", "john.smith@email.com", "555-0101", LocalDate.of(2024, 1, 15)));
-        addMember(new Member(nextMemberId++, "Emily Johnson", "emily.j@email.com", "555-0102", LocalDate.of(2024, 3, 22)));
-        addMember(new Member(nextMemberId++, "Michael Brown", "m.brown@email.com", "555-0103", LocalDate.of(2024, 6, 10)));
-        addMember(new Member(nextMemberId++, "Sarah Davis", "sarah.d@email.com", "555-0104", LocalDate.of(2024, 8, 5)));
+        addMember(new Member(0, "Alice Johnson", "alice@university.edu", "+1-555-0101", LocalDate.of(2024, 9, 1)));
+        addMember(new Member(0, "Bob Smith", "bob@university.edu", "+1-555-0102", LocalDate.of(2024, 9, 15)));
+        addMember(new Member(0, "Carol Williams", "carol@university.edu", "+1-555-0103", LocalDate.of(2025, 1, 10)));
 
-        currentUser = members.get(0);
+        Transaction t1 = new Transaction(0, books.get(0), members.get(0), LocalDate.now().minusDays(10), LocalDate.now().plusDays(4));
+        addTransactionDirect(t1);
+        books.get(0).borrowCopy();
 
-        createSampleTransaction(books.get(2), members.get(0),
-                LocalDate.now().minusDays(20), LocalDate.now().minusDays(6));
-        createSampleTransaction(books.get(0), members.get(0),
-                LocalDate.now().minusDays(5), LocalDate.now().plusDays(9));
+        Transaction t2 = new Transaction(0, books.get(5), members.get(1), LocalDate.now().minusDays(20), LocalDate.now().minusDays(6));
+        addTransactionDirect(t2);
+        books.get(5).borrowCopy();
 
-        bookRequests.add(new BookRequest(nextRequestId++, members.get(1), "Design Patterns", "Gang of Four", "Needed for software engineering course"));
+        Transaction t3 = new Transaction(0, books.get(2), members.get(0), LocalDate.now().minusDays(30), LocalDate.now().minusDays(16));
+        t3.setReturnDate(LocalDate.now().minusDays(14));
+        addTransactionDirect(t3);
     }
 
-    private void createSampleTransaction(Book book, Member member, LocalDate borrowDate, LocalDate dueDate) {
-        Transaction transaction = new Transaction(nextTransactionId++, book, member, borrowDate, dueDate);
-        transactions.add(transaction);
-        book.borrowCopy();
+    private void addTransactionDirect(Transaction t) {
+        t.setId(nextTransactionId++);
+        transactions.add(t);
     }
 
-    public List<Book> getBooks() { return new ArrayList<>(books); }
-    public List<Member> getMembers() { return new ArrayList<>(members); }
-    public List<Transaction> getTransactions() { return new ArrayList<>(transactions); }
-    public List<BookRequest> getBookRequests() { return new ArrayList<>(bookRequests); }
-    public LibraryInfo getLibraryInfo() { return libraryInfo; }
+    public List<Book> getBooks() {
+        return new ArrayList<>(books);
+    }
+
+    public List<Member> getMembers() {
+        return new ArrayList<>(members);
+    }
+
+    public List<Transaction> getTransactions() {
+        return new ArrayList<>(transactions);
+    }
+
+    public List<BookRequest> getBookRequests() {
+        return new ArrayList<>(bookRequests);
+    }
+
+    public LibraryInfo getLibraryInfo() {
+        return libraryInfo;
+    }
 
     public Member getCurrentUser() { return currentUser; }
     public void setCurrentUser(Member user) { this.currentUser = user; }
 
     public void addBook(Book book) {
-        if (book.getId() == 0) book.setId(nextBookId++);
+        book.setId(nextBookId++);
         books.add(book);
     }
 
@@ -97,7 +107,7 @@ public class DataManager {
         for (int i = 0; i < books.size(); i++) {
             if (books.get(i).getId() == book.getId()) {
                 books.set(i, book);
-                return;
+                break;
             }
         }
     }
@@ -107,7 +117,7 @@ public class DataManager {
     }
 
     public void addMember(Member member) {
-        if (member.getId() == 0) member.setId(nextMemberId++);
+        member.setId(nextMemberId++);
         members.add(member);
     }
 
@@ -115,7 +125,7 @@ public class DataManager {
         for (int i = 0; i < members.size(); i++) {
             if (members.get(i).getId() == member.getId()) {
                 members.set(i, member);
-                return;
+                break;
             }
         }
     }
@@ -129,7 +139,7 @@ public class DataManager {
         if (book.getAvailableQuantity() <= 0) {
             return false;
         }
-        if (transaction.getId() == 0) transaction.setId(nextTransactionId++);
+        transaction.setId(nextTransactionId++);
         transactions.add(transaction);
         book.borrowCopy();
         return true;
@@ -145,57 +155,58 @@ public class DataManager {
     }
 
     public void addBookRequest(BookRequest request) {
-        if (request.getId() == 0) request.setId(nextRequestId++);
+        request.setId(nextRequestId++);
         bookRequests.add(request);
     }
 
     public List<Book> searchBooks(String query) {
-        String lowerQuery = query.toLowerCase();
+        String q = query.toLowerCase();
         return books.stream()
-                .filter(b -> b.getTitle().toLowerCase().contains(lowerQuery) ||
-                        b.getAuthor().toLowerCase().contains(lowerQuery) ||
-                        b.getIsbn().toLowerCase().contains(lowerQuery) ||
-                        b.getSection().toLowerCase().contains(lowerQuery) ||
-                        b.getGenre().toLowerCase().contains(lowerQuery))
+                .filter(b -> b.getTitle().toLowerCase().contains(q) ||
+                        b.getAuthor().toLowerCase().contains(q) ||
+                        b.getIsbn().toLowerCase().contains(q) ||
+                        b.getSection().toLowerCase().contains(q) ||
+                        b.getGenre().toLowerCase().contains(q))
                 .collect(Collectors.toList());
     }
 
     public List<Book> searchBooksByField(String query, String field) {
-        String lowerQuery = query.toLowerCase();
+        if ("All".equals(field)) return searchBooks(query);
+        String q = query.toLowerCase();
         return books.stream()
                 .filter(b -> {
                     switch (field) {
-                        case "Title": return b.getTitle().toLowerCase().contains(lowerQuery);
-                        case "Author": return b.getAuthor().toLowerCase().contains(lowerQuery);
-                        case "ISBN": return b.getIsbn().toLowerCase().contains(lowerQuery);
-                        case "Section": return b.getSection().toLowerCase().contains(lowerQuery);
-                        case "Genre": return b.getGenre().toLowerCase().contains(lowerQuery);
-                        default: return b.getTitle().toLowerCase().contains(lowerQuery) ||
-                                b.getAuthor().toLowerCase().contains(lowerQuery) ||
-                                b.getIsbn().toLowerCase().contains(lowerQuery) ||
-                                b.getSection().toLowerCase().contains(lowerQuery) ||
-                                b.getGenre().toLowerCase().contains(lowerQuery);
+                        case "Title": return b.getTitle().toLowerCase().contains(q);
+                        case "Author": return b.getAuthor().toLowerCase().contains(q);
+                        case "ISBN": return b.getIsbn().toLowerCase().contains(q);
+                        case "Section": return b.getSection().toLowerCase().contains(q);
+                        case "Genre": return b.getGenre().toLowerCase().contains(q);
+                        default: return false;
                     }
                 })
                 .collect(Collectors.toList());
     }
 
     public List<Book> getAvailableBooks() {
-        return books.stream().filter(Book::isAvailable).collect(Collectors.toList());
+        return books.stream()
+                .filter(b -> b.getAvailableQuantity() > 0)
+                .collect(Collectors.toList());
     }
 
     public List<Transaction> getActiveTransactions() {
-        return transactions.stream().filter(t -> !t.isReturned()).collect(Collectors.toList());
+        return transactions.stream()
+                .filter(t -> !t.isReturned())
+                .collect(Collectors.toList());
     }
 
     public List<Transaction> getOverdueTransactions() {
-        return transactions.stream().filter(Transaction::isOverdue).collect(Collectors.toList());
+        return transactions.stream()
+                .filter(t -> !t.isReturned() && t.isOverdue())
+                .collect(Collectors.toList());
     }
 
     public List<Transaction> getMemberTransactions(Member member) {
-        return transactions.stream()
-                .filter(t -> t.getMember().getId() == member.getId())
-                .collect(Collectors.toList());
+        return getMemberAllTransactions(member);
     }
 
     public List<Transaction> getMemberActiveTransactions(Member member) {
@@ -221,7 +232,9 @@ public class DataManager {
     }
 
     public List<BookRequest> getPendingRequests() {
-        return bookRequests.stream().filter(BookRequest::isPending).collect(Collectors.toList());
+        return bookRequests.stream()
+                .filter(BookRequest::isPending)
+                .collect(Collectors.toList());
     }
 
     public Book getBookById(int id) {
@@ -234,12 +247,18 @@ public class DataManager {
 
     public int getTotalBooks() { return books.size(); }
     public int getTotalMembers() { return members.size(); }
-    public int getActiveLoansCount() { return getActiveTransactions().size(); }
-    public int getOverdueCount() { return getOverdueTransactions().size(); }
+
+    public int getActiveLoansCount() {
+        return (int) transactions.stream().filter(t -> !t.isReturned()).count();
+    }
+
+    public int getOverdueCount() {
+        return (int) transactions.stream().filter(t -> !t.isReturned() && t.isOverdue()).count();
+    }
 
     public double getMemberTotalFines(Member member) {
-        return transactions.stream()
-                .filter(t -> t.getMember().getId() == member.getId() && t.calculateFine() > 0 && !t.isFinePaid())
+        return getMemberAllTransactions(member).stream()
+                .filter(t -> t.calculateFine() > 0 && !t.isFinePaid())
                 .mapToDouble(Transaction::calculateFine)
                 .sum();
     }
@@ -248,6 +267,7 @@ public class DataManager {
         return books.stream()
                 .map(Book::getGenre)
                 .distinct()
+                .sorted()
                 .collect(Collectors.toList());
     }
 
@@ -263,5 +283,27 @@ public class DataManager {
                 .filter(t -> t.calculateFine() > 0 && !t.isFinePaid())
                 .mapToDouble(Transaction::calculateFine)
                 .sum();
+    }
+
+    public void updateLibraryInfo(LibraryInfo info) {
+        this.libraryInfo = info;
+    }
+
+    public void updateBookRequestStatus(int requestId, String status) {
+        for (BookRequest r : bookRequests) {
+            if (r.getId() == requestId) {
+                r.setStatus(status);
+                break;
+            }
+        }
+    }
+
+    public void collectFine(int transactionId) {
+        for (Transaction t : transactions) {
+            if (t.getId() == transactionId) {
+                t.payFine();
+                break;
+            }
+        }
     }
 }

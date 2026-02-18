@@ -24,7 +24,7 @@ public class LibraryApp extends JFrame {
         setMinimumSize(new Dimension(900, 650));
         setLocationRelativeTo(null);
 
-        URL iconURL = getClass().getResource("/library/resources/logo.png");
+        URL iconURL = getClass().getResource("/main/java//library/resources/logo.png");
         if (iconURL != null) {
             setIconImage(new ImageIcon(iconURL).getImage());
         }

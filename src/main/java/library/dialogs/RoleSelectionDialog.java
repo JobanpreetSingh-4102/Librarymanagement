@@ -20,7 +20,7 @@ public class RoleSelectionDialog extends JDialog {
         setLocationRelativeTo(null);
         setResizable(false);
 
-        URL iconURL = getClass().getResource("logo.png");
+        URL iconURL = getClass().getResource("/main/java/library/resources/logo.png");
         if (iconURL != null) {
             setIconImage(new ImageIcon(iconURL).getImage());
         }

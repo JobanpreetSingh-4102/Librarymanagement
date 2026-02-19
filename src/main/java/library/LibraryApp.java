@@ -6,9 +6,7 @@ import main.java.library.panels.StudentPanel;
 import main.java.library.panels.StaffPanel;
 
 import javax.swing.*;
-import javax.imageio.ImageIO;
 import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.net.URL;
 
 public class LibraryApp extends JFrame {
@@ -20,13 +18,13 @@ public class LibraryApp extends JFrame {
     public LibraryApp(String role) {
         this.userRole = role;
 
-        setTitle("Library Management - " + role + " Portal");
+        setTitle("Library Management System - " + role + " Portal");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1100, 750);
         setMinimumSize(new Dimension(900, 650));
         setLocationRelativeTo(null);
 
-        URL iconURL = getClass().getResource("/main/java/library/resources/logo.png");
+        URL iconURL = getClass().getResource("/main/java//library/resources/logo.png");
         if (iconURL != null) {
             setIconImage(new ImageIcon(iconURL).getImage());
         }
@@ -60,49 +58,16 @@ public class LibraryApp extends JFrame {
     }
 
     private JPanel createHeaderPanel() {
-        BufferedImage headerBg = null;
-        try {
-            URL bgURL = getClass().getResource("/main/java/library/resources/Background2.jpg");
-            if (bgURL != null) {
-                headerBg = ImageIO.read(bgURL);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        final BufferedImage bgImage = headerBg;
-
-        JPanel headerPanel = new JPanel(new BorderLayout()) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                Graphics2D g2d = (Graphics2D) g.create();
-                if (bgImage != null) {
-                    int imgW = bgImage.getWidth();
-                    int imgH = bgImage.getHeight();
-                    double scale = Math.max((double) getWidth() / imgW, (double) getHeight() / imgH);
-                    int drawW = (int) (imgW * scale);
-                    int drawH = (int) (imgH * scale);
-                    int x = (getWidth() - drawW) / 2;
-                    int y = (getHeight() - drawH) / 2;
-                    g2d.drawImage(bgImage, x, y, drawW, drawH, null);
-                    g2d.setColor(new Color(0, 0, 0, 140));
-                    g2d.fillRect(0, 0, getWidth(), getHeight());
-                } else {
-                    g2d.setColor(PRIMARY_COLOR);
-                    g2d.fillRect(0, 0, getWidth(), getHeight());
-                }
-                g2d.dispose();
-            }
-        };
-        headerPanel.setOpaque(false);
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setBackground(PRIMARY_COLOR);
         headerPanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
 
-        JLabel titleLabel = new JLabel("Library Management ");
+        JLabel titleLabel = new JLabel("Library Management System");
         titleLabel.setFont(new Font("SansSerif", Font.BOLD, 24));
         titleLabel.setForeground(Color.WHITE);
 
         String subtitle = "Student".equals(userRole)
-                ? "Welcome, Student! Browse books, request a book and more."
+                ? "Welcome, Student! Browse books, check your loans, and more."
                 : "Staff Portal - Manage books, members, and library operations";
 
         JLabel subtitleLabel = new JLabel(subtitle);

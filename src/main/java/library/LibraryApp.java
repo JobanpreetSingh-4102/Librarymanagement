@@ -1,6 +1,5 @@
 package main.java.library;
 
-
 import main.java.library.dialogs.RoleSelectionDialog;
 import main.java.library.panels.StudentPanel;
 import main.java.library.panels.StaffPanel;

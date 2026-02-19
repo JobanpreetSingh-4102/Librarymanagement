@@ -237,6 +237,12 @@ public class DataManager {
                 .collect(Collectors.toList());
     }
 
+    public List<BookRequest> getMemberBookRequests(Member member) {
+        return bookRequests.stream()
+                .filter(r -> r.getRequestedBy().getId() == member.getId())
+                .collect(Collectors.toList());
+    }
+
     public Book getBookById(int id) {
         return books.stream().filter(b -> b.getId() == id).findFirst().orElse(null);
     }

@@ -235,17 +235,25 @@ public class StudentPanel extends JPanel {
 
     private JPanel createRequestBookPanel() {
         JPanel panel = new BackgroundPanel(new BorderLayout(10, 10));
-        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+
+        JPanel topSection = new JPanel(new BorderLayout(10, 10));
+        topSection.setOpaque(false);
+
+        JLabel headerLabel = new JLabel("Request a New Book for the Library");
+        headerLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
+        headerLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        topSection.add(headerLabel, BorderLayout.NORTH);
 
         JPanel formPanel = new JPanel(new GridBagLayout());
         formPanel.setOpaque(false);
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.insets = new Insets(8, 10, 8, 10);
         gbc.anchor = GridBagConstraints.WEST;
 
-        JTextField titleField = new JTextField(30);
-        JTextField authorField = new JTextField(30);
-        JTextArea reasonArea = new JTextArea(4, 30);
+        JTextField titleField = new JTextField(25);
+        JTextField authorField = new JTextField(25);
+        JTextArea reasonArea = new JTextArea(3, 25);
         reasonArea.setLineWrap(true);
         reasonArea.setWrapStyleWord(true);
 
@@ -270,6 +278,56 @@ public class StudentPanel extends JPanel {
         JButton submitBtn = createButton("Submit Request", AVAILABLE_COLOR);
         formPanel.add(submitBtn, gbc);
 
+        topSection.add(formPanel, BorderLayout.CENTER);
+
+        JPanel bottomSection = new JPanel(new BorderLayout(10, 5));
+        bottomSection.setOpaque(false);
+
+        JLabel myRequestsLabel = new JLabel("My Submitted Requests");
+        myRequestsLabel.setFont(new Font("SansSerif", Font.BOLD, 15));
+        myRequestsLabel.setForeground(PRIMARY_COLOR);
+        myRequestsLabel.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 0));
+        bottomSection.add(myRequestsLabel, BorderLayout.NORTH);
+
+        String[] columns = {"ID", "Book Title", "Author", "Reason", "Date", "Status"};
+        DefaultTableModel requestsTableModel = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) { return false; }
+        };
+        JTable requestsTable = createStyledTable(requestsTableModel);
+
+        requestsTable.getColumnModel().getColumn(5).setCellRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value,
+                                                           boolean isSelected, boolean hasFocus, int row, int column) {
+                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                if (!isSelected) {
+                    String status = (String) value;
+                    if ("Approved".equals(status)) c.setForeground(AVAILABLE_COLOR);
+                    else if ("Rejected".equals(status)) c.setForeground(DANGER_COLOR);
+                    else c.setForeground(WARNING_COLOR);
+                }
+                setHorizontalAlignment(CENTER);
+                return c;
+            }
+        });
+
+        Runnable refreshRequests = () -> {
+            requestsTableModel.setRowCount(0);
+            List<BookRequest> myRequests = dataManager.getMemberBookRequests(dataManager.getCurrentUser());
+            for (BookRequest r : myRequests) {
+                requestsTableModel.addRow(new Object[]{
+                        r.getId(), r.getBookTitle(), r.getAuthorName(),
+                        r.getReason().isEmpty() ? "-" : r.getReason(),
+                        r.getRequestDate().format(dateFormatter), r.getStatus()
+                });
+            }
+        };
+
+        refreshRequests.run();
+
+        bottomSection.add(new JScrollPane(requestsTable), BorderLayout.CENTER);
+
         submitBtn.addActionListener(e -> {
             String title = titleField.getText().trim();
             String author = authorField.getText().trim();
@@ -286,16 +344,18 @@ public class StudentPanel extends JPanel {
             titleField.setText("");
             authorField.setText("");
             reasonArea.setText("");
+            refreshRequests.run();
             JOptionPane.showMessageDialog(panel, "Book request submitted successfully!",
                     "Success", JOptionPane.INFORMATION_MESSAGE);
         });
 
-        JLabel headerLabel = new JLabel("Request a New Book for the Library");
-        headerLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
-        headerLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, topSection, bottomSection);
+        splitPane.setResizeWeight(0.45);
+        splitPane.setDividerSize(5);
+        splitPane.setOpaque(false);
+        splitPane.setBorder(null);
 
-        panel.add(headerLabel, BorderLayout.NORTH);
-        panel.add(formPanel, BorderLayout.CENTER);
+        panel.add(splitPane, BorderLayout.CENTER);
         return panel;
     }
 
